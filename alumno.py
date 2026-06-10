@@ -42,3 +42,58 @@ class Alumno:
         completo y la nota media del alumno con un decimal.
         """
         return f'{self.numIden}\t{self.nombre}\t{self.media():.1f}'
+
+
+import re
+
+def leeAlumnos(ficAlum):
+    """
+    Lee un fichero de texto con los datos de los alumnos y devuelve un
+    diccionario donde la clave es el nombre del alumno y el valor es
+    el objeto 'Alumno' correspondiente.
+
+    La función analiza cada línea mediante expresiones regulares.
+
+    Prueba unitaria (doctest):
+    >>> alumnos = leeAlumnos('alumnos.txt')
+    >>> for alumno in alumnos:
+    ...     print(alumnos[alumno])
+    ...
+    171\tBlanca Agirrebarrenetse\t9.5
+    23\tCarles Balcell de Lara\t4.9
+    68\tDavid Garcia Fuster\t7.0
+    """
+    dicc_alumnos = {}
+    
+    # Expresión regular:
+    # ^(\\d+): Captura el ID al inicio
+    # \\s+(.+?): Captura el nombre de forma no codiciosa hasta las notas
+    # \\s+([\\d\\s.]+?)$: Captura la secuencia de notas al final de la línea
+    patron = re.compile(r"^(\d+)\s+(.+?)\s+([\d\s.]+?)$")
+
+    try:
+        with open(ficAlum, 'r', encoding='utf-8') as f:
+            for linea in f:
+                linea = linea.strip()
+                if not linea:
+                    continue
+                
+                match = patron.match(linea)
+                if match:
+                    id_str, nombre, notas_str = match.groups()
+                    num_id = int(id_str)
+                    
+                    # Extraemos todas las notas individuales de la subcadena
+                    notas = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", notas_str)]
+                    
+                    # Creamos el objeto Alumno y lo guardamos
+                    dicc_alumnos[nombre] = Alumno(nombre, num_id, notas)
+    except FileNotFoundError:
+        print(f"Error: El fichero '{ficAlum}' no existe.")
+        
+    return dicc_alumnos
+
+if __name__ == "__main__":
+    import doctest
+    # Se ejecuta el doctest con normalización de espacios en blanco
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE, verbose=True)
